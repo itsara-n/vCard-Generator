@@ -2,24 +2,14 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 )
 
-type ContactsList struct {
-	Version  string        `json:"version"`
-	Contacts []ContactData `json:"contacts"`
-}
-
-type ContactData struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-var path = "./mock-contacts.json"
+var path = "./mock-contacts.vcf"
 
 func createFile(data string) {
 	var file, err = os.Create(path)
@@ -36,8 +26,7 @@ func main() {
 	pureInputMax := (strings.TrimSuffix(inputMax, "\n"))
 	MAX, _ := strconv.Atoi(pureInputMax)
 
-	var contactsList ContactsList
-	contactsList.Version = "1"
+	var buffer bytes.Buffer
 
 	for i := 1; i <= MAX; i++ {
 		var num = strconv.Itoa(i)
@@ -47,10 +36,13 @@ func main() {
 				num = "0" + num
 			}
 		}
-		contactsList.Contacts = append(contactsList.Contacts, ContactData{Name: "Name" + string(num), Email: "Name" + string(num) + "@testmail.com"})
+		buffer.WriteString("BEGIN:VCARD\n")
+		buffer.WriteString("VERSION:3.0\n")
+		buffer.WriteString("FN:Test" + num + "\n")
+		buffer.WriteString("EMAIL;TYPE=HOME,INTERNET,pref:Test" + num + "@gmail.com\n")
+		buffer.WriteString("END:VCARD\n")
 	}
 
-	output, _ := json.MarshalIndent(&contactsList, "", "  ")
-	fmt.Println(string(output))
-	createFile(string(output))
+	fmt.Printf(buffer.String())
+	createFile(buffer.String())
 }
